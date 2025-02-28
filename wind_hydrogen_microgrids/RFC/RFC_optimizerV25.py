@@ -7,30 +7,27 @@ from contextlib import redirect_stdout
 
 
 #Sets
-T = range(0, 8760) #Time period {0,...,672}
-WS = [1, 2, 3, 4] #Sizes of wind turbine {1=500kW, 2=800kW, 3=900kW, 4=1500kW}
+T = range(0, 8760) #Time period
+WS = [1, 2, 3, 4] #Sizes of wind turbine {1 = 100kW, 2=500kW, 3=800kW, 4=1500kW}
 RS = [1, 2, 3] #Sizes of RFC {1=1000kW, 2=20000kW, 3=100000kW}
 HFS = [1] #Sizes of H2 furnace {1=11.72kW, 2=17.58kW, 3=23.44kW, 4=29.30kW}
 SLT = range(0, 336)
 
 C = ['Francois', 'Beaver Creek', 'Wrigley', 'Tsiigehtchic', 'Resolute Bay', 'Aupaluk', 'Old Crow', 
-'Peawanuck', 'Tadoule Lake', 'Kwadacha', 'Makkovik', 'Port Hope Simpson', 'Umiujaq', 'Ramea', 
-'Whati', 'Brochet', 'Fort Good Hope', 'Kingfisher Lake', 'Old Masset', 'Port Clements', 
-'Keewaywin', 'Fort McPherson', 'Kangiqsujuaq', 'Watson Lake', 'Fort Chipewyan', 
-'Arctic Bay', 'Weagamow Lake', 'Natuashish', 'Kangiqsualujjuaq', 'Naujaat', 'Fort Simpson', 
-'Shamattawa', 'Pond Inlet', 'Inukjuak', 'Kuujjuaq', 'Rankin Inlet', 'Iqaluit']
+ 'Peawanuck', 'Tadoule Lake', 'Kwadacha', 'Makkovik', 'Port Hope Simpson', 'Umiujaq', 'Ramea', 
+ 'Whati', 'Brochet', 'Fort Good Hope', 'Kingfisher Lake', 'Old Masset', 'Port Clements', 
+ 'Keewaywin', 'Fort McPherson', 'Kangiqsujuaq', 'Watson Lake', 'Fort Chipewyan', 
+ 'Arctic Bay', 'Weagamow Lake', 'Natuashish', 'Kangiqsualujjuaq', 'Naujaat', 'Fort Simpson', 
+ 'Shamattawa', 'Pond Inlet', 'Inukjuak', 'Kuujjuaq', 'Rankin Inlet', 'Iqaluit']
 
-#C = ['Fort Chipewyan', 
-#'Arctic Bay', 'Weagamow Lake', 'Natuashish', 'Kangiqsualujjuaq', 'Naujaat', 'Fort Simpson', 
-#'Shamattawa', 'Pond Inlet', 'Inukjuak', 'Kuujjuaq', 'Rankin Inlet', 'Iqaluit']
-
-#C = ['Masset']
 
 # Read the data from Excel using Pandas
-df2 = pd.read_excel('RFC_DataV24.xls', 'Unit Size', header=0, index_col=0)
-df3 = pd.read_excel('RFC_DataV24.xls', 'Max Cap', header=0, index_col=0)
-df5 = pd.read_excel('RFC_DataV24.xls', 'Costs', header=0, index_col=0)
-df6 = pd.read_excel('RFC_DataV24.xls', 'Constants', header=0, index_col=0)
+df2 = pd.read_excel(r"\RFC_DataV24.xls", 'Unit Size', header=0, index_col=0)
+df3 = pd.read_excel(r"\RFC_DataV24.xls", 'Max Cap', header=0, index_col=0)
+df5 = pd.read_excel(r"\RFC_DataV24.xls", 'Costs', header=0, index_col=0)
+df6 = pd.read_excel(r"\RFC_DataV24.xls", 'Constants', header=0, index_col=0)
+
+
 
 results_folder = 'Results'
 
@@ -103,16 +100,14 @@ H_T_temp = pd.DataFrame(df6['H_T']).to_dict() #Conversion of H2 to thermal energ
 H_T = dict(ChainMap(*H_T_temp.values()))
 M_temp = pd.DataFrame(df6['M']).to_dict() #Water requirement for H2 processes (kg H20/kg H2)
 M = dict(ChainMap(*M_temp.values()))
-H2L_temp = pd.DataFrame(df6['H2L']).to_dict() #Water requirement for H2 processes (kg H20/kg H2)
+H2L_temp = pd.DataFrame(df6['H2L']).to_dict() #Hydrogen storage lifetime
 H2L = dict(ChainMap(*H2L_temp.values()))
 
 # Run model for all models in set C
 for c in C:
     # Define location specific data file
-    #df1 = pd.read_excel('RFC Datasets - One Year.xlsm', c, header=0)
-    df1 = pd.read_excel('RFC Datasets - Final.xlsx', c, header=0)
-    #df1 = pd.read_excel('RFC Datasets - One Year.xlsx', c, header=0)
-    #df2 = pd.read_excel('heating_data_unchanged.xlsx', c, header =0)
+    df1 = pd.read_excel(r"RFC Datasets - Final.xlsx", c, header=0)
+    
 
     # Define location specific data
     W_temp = pd.DataFrame(df1['wind_speed']).to_dict() #Windspeed (m/s)
@@ -129,12 +124,12 @@ for c in C:
     
     
     # Create the Pyomo model
-    model = create_RFC_modelV24(T, WS, RS, HFS, SLT, W, L, LT, WUe, RUe, HFUt, WKe, RKe, HFKt, WCAP, RCAP, HFCAP, WOP, ROP, HFOP, SCAP, SOP, r, WL, SL, RL, HFL, EtaR, Etas, EtaHF, Rmin, H_E, E_H, H_T, M, Hi, roe, A, Cp, S, Co, Ci, SKe, H2CAP, H2L)
+    model = create_RFC_modelV24(T, WS, RS, HFS, W, L, LT, WUe, RUe, HFUt, WKe, RKe, HFKt, WCAP, RCAP, HFCAP, WOP, ROP, HFOP, SCAP, SOP, r, WL, SL, RL, HFL, EtaR, Etas, EtaHF, Rmin, H_E, E_H, H_T, M, roe, A, Cp, S, Co, Ci, SKe, H2CAP, H2L)
 
     # Create the solver interface and solve the model
     solver = pyo.SolverFactory('gurobi')
-    solver.options['mipgap'] = 0.02
-    solver.solve(model, tee=True)#, timelimit=240)
+    solver.options['mipgap'] = 0.01
+    solver.solve(model, tee=True)
 
     txt_output_path = os.path.join(results_folder, f'{c}.txt')
     excel_output_path = os.path.join(results_folder, f'{c}_outputs.xlsx')
@@ -173,7 +168,7 @@ for c in C:
             model.y.pprint()
 
    
-    # Separate capturing of scalar data and indexed data
+    # Create Excel Results
     scalar_data = {
         'Total Cost Annual Costs ($)': (model.tc.value),
         'Total Capital Cost (CAPEX)': (model.cc.value),
@@ -188,7 +183,7 @@ for c in C:
 
     }
 
-    # Creating tables for turbines and RFCs
+    
     turbine_data = [
         {'Size': '100 kW', 'Built': model.nwe[1].value, 'Capacity (kW)': (model.cwe[1].value)},
         {'Size': '500 kW', 'Built': model.nwe[2].value, 'Capacity (kW)': (model.cwe[2].value)},
@@ -208,7 +203,7 @@ for c in C:
     rfc_df.loc['Total'] = rfc_df.sum(numeric_only=True)
     rfc_df.at['Total', 'Size'] = 'Total'
 
-    # Capturing time-dependent data
+
     time_series_data = {
         'Timestep': list(T),
         'State of RFC (SoR), (tH2)': [(model.SoR[t].value) for t in T],
@@ -221,10 +216,10 @@ for c in C:
         'Thermal Load (LT), (kWh)': [LT[t] for t in T]
     }
 
-    # Creating a DataFrame for time series data
+    
     time_series_df = pd.DataFrame(time_series_data)
 
-    # Create an Excel writer object and add the DataFrames to different sheets
+    
     with pd.ExcelWriter(excel_output_path) as writer:
         scalar_df = pd.DataFrame(list(scalar_data.items()), columns=['Parameter', 'Value'])
         scalar_df.to_excel(writer, sheet_name='Summary Scalars', index=False)

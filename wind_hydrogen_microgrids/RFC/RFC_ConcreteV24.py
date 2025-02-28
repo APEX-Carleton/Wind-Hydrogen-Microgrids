@@ -2,7 +2,7 @@
 
 import pyomo.environ as pyo
 
-def create_RFC_modelV24(T, WS, RS, HFS, SLT, W, L, LT, WUe, RUe, HFUt, WKe, RKe, HFKt, WCAP, RCAP, HFCAP, WOP, ROP, HFOP, SCAP, SOP, r, WL, SL, RL, HFL, EtaR, Etas, EtaHF, Rmin, H_E, E_H, H_T, M, Hi, roe, A, Cp, S, Co, Ci, SKe, H2CAP, H2L):
+def create_RFC_modelV24(T, WS, RS, HFS, W, L, LT, WUe, RUe, HFUt, WKe, RKe, HFKt, WCAP, RCAP, HFCAP, WOP, ROP, HFOP, SCAP, SOP, r, WL, SL, RL, HFL, EtaR, Etas, EtaHF, Rmin, H_E, E_H, H_T, M, roe, A, Cp, S, Co, Ci, SKe, H2CAP, H2L):
     model = pyo.ConcreteModel(name="(RFC_OptimizerV24)")
 
     # Variables
@@ -36,6 +36,7 @@ def create_RFC_modelV24(T, WS, RS, HFS, SLT, W, L, LT, WUe, RUe, HFUt, WKe, RKe,
     model.nre = pyo.Var(RS, within=pyo.NonNegativeIntegers) # Capacity investment for RFC
     model.cre = pyo.Var(RS, within=pyo.NonNegativeReals) # total capacity for RFC
     model.SoR = pyo.Var(T, within=pyo.NonNegativeReals) # State of Charge of RFC (amount of H2 stored)
+    model.SoR0 = pyo.Var(within=pyo.NonNegativeReals, bounds=(Rmin['Const'], 100000000000))
 
     # H2 Furnace
     model.hft = pyo.Var(T, within=pyo.NonNegativeReals) # Generation from H2 furnace for time t for thermal
@@ -179,7 +180,6 @@ def create_RFC_modelV24(T, WS, RS, HFS, SLT, W, L, LT, WUe, RUe, HFUt, WKe, RKe,
         return model.max_h2_storage >= model.SoR[t]
     model.track_max_h2_storage_con = pyo.Constraint(T, rule=track_max_h2_storage)
     
-    # Linear reformulation without the ceil function
     def max_h2_storage_increments_lower(model):
         return model.n_h2_storage * 10 >= model.max_h2_storage
     model.max_h2_storage_increments_lower_con = pyo.Constraint(rule=max_h2_storage_increments_lower)
@@ -192,11 +192,11 @@ def create_RFC_modelV24(T, WS, RS, HFS, SLT, W, L, LT, WUe, RUe, HFUt, WKe, RKe,
         if t > 0:
             return model.SoR[t] == model.SoR[t-1] + ((model.powlvl[t] * EtaR['Const'] * (H_E['Const'])) * model.y[t]) + ((model.powlvl[t] * EtaR['Const'] * (E_H['Const'])) * (1 - model.y[t])) - (((LT[t]) * (H_T['Const'])) / EtaHF['Const'])
         else:
-            return model.SoR[t] == (Hi) + ((model.powlvl[t] * EtaR['Const'] * (H_E['Const'])) * model.y[t]) + ((model.powlvl[t] * EtaR['Const'] * (E_H['Const'])) * (1 - model.y[t])) - (((LT[t]) * (H_T['Const'])) / EtaHF['Const'])
+            return model.SoR[t] == (model.SoR0) + ((model.powlvl[t] * EtaR['Const'] * (H_E['Const'])) * model.y[t]) + ((model.powlvl[t] * EtaR['Const'] * (E_H['Const'])) * (1 - model.y[t])) - (((LT[t]) * (H_T['Const'])) / EtaHF['Const'])
     model.RFC_statecon = pyo.Constraint(T, rule=RFC_state)
     
     def RFC_state2(model):
-        return model.SoR[8759] == (Hi)
+        return model.SoR[8759] == (model.SoR0)
     model.RFC_statcon = pyo.Constraint(rule=RFC_state2)
     
     def RFC_energy1(model, t):
