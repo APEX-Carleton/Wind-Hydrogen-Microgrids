@@ -19,4 +19,4 @@ This repository contains the models, datasets, and result tables for the paper "
     - "RFC_DataV24_WC: Contains input data considering conservative northern wind capital costs.
     - \Conservative_results: Folder containing results for each community when considering conservative wind capital costs.
 
-  \Data shared with the research team under a non-disclosure agreement have been removed.
+  /Data shared with the research team under a non-disclosure agreement have been removed.
